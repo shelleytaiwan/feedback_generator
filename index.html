@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>評語報告生成器</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --border: #ced4da;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        fieldset {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+        legend {
+            font-weight: bold;
+            color: var(--accent);
+            padding: 0 10px;
+            font-size: 16px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: inline-block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        .col {
+            flex: 1;
+        }
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            margin-top: 5px;
+            background: #fdfefe;
+            padding: 10px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+        }
+        .checkbox-group label {
+            font-weight: normal;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .range-container input[type="range"] {
+            flex: 1;
+        }
+        .range-value {
+            font-weight: bold;
+            color: var(--accent);
+            min-width: 30px;
+            text-align: center;
+        }
+        button.generate-btn {
+            display: block;
+            width: 100%;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 20px;
+        }
+        button.generate-btn:hover {
+            background-color: #219653;
+        }
+        .output-section {
+            margin-top: 30px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .output-section h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        textarea.output-box {
+            width: 100%;
+            height: 250px;
+            background: #1a252f;
+            color: #ecf0f1;
+            border: 1px solid #34495e;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .copy-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .copy-btn:hover {
+            background-color: #2980b9;
+        }
+        .footer-credit {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>評語報告生成器</h1>
+    
+    <form id="reportForm">
+        <!-- 基本資料 -->
+        <fieldset>
+            <legend>基本資訊</legend>
+            <div class="row">
+                <div class="col">
+                    <label for="studentName">學生姓名：</label>
+                    <input type="text" id="studentName" placeholder="例如：Michelle">
+                </div>
+                <div class="col">
+                    <label for="studentGender">性別：</label>
+                    <select id="studentGender">
+                        <option value="female">女 (She/Her)</option>
+                        <option value="male">男 (He/Him)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row" style="margin-top: 15px;">
+                <div class="col">
+                    <label for="examType">考試類型：</label>
+                    <select id="examType">
+                        <option value="AP Chinese Language and Culture">AP中文和文化</option>
+                        <option value="IB Chinese B">IB中文B</option>
+                        <option value="General Chinese">其他 / 一般中文課程</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="useTextbook">是否使用課本：</label>
+                    <select id="useTextbook" onchange="toggleTextbookLesson()">
+                        <option value="no">否</option>
+                        <option value="yes">是</option>
+                    </select>
+                </div>
+                <div class="col" id="lessonNumCol" style="display: none;">
+                    <label for="textbookLesson">第幾課：</label>
+                    <input type="text" id="textbookLesson" placeholder="例如：第 5 課">
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- 課程階段 (一至六) -->
+        <div id="stagesContainer">
+            <!-- 動態生成階段 -->
+        </div>
+
+        <!-- 整體表現與作業 -->
+        <fieldset>
+            <legend>總結與作業</legend>
+            <div class="form-group">
+                <label>整體表現 (1-10 分)：</label>
+                <div class="range-container">
+                    <input type="range" id="overallScore" min="1" max="10" value="9" oninput="updateRangeVal('overallScore', 'overallVal')">
+                    <span class="range-value" id="overallVal">9</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>作業項目 (可複選)：</label>
+                <div class="checkbox-group" id="homeworkTypes">
+                    <label><input type="checkbox" value="listening practice"> 聽力練習 (Listening)</label>
+                    <label><input type="checkbox" value="speaking practice"> 口說練習 (Speaking)</label>
+                    <label><input type="checkbox" value="reading practice"> 閱讀理解 (Reading)</label>
+                    <label><input type="checkbox" value="writing practice"> 寫作練習 (Writing)</label>
+                    <label><input type="checkbox" value="cultural presentation preparation"> 文化演講準備 (Cultural presentation)</label>
+                    <label><input type="checkbox" value="email reply practice"> 郵件回覆 (Email reply)</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="homeworkDesc">作業主題與補充內容：</label>
+                <input type="text" id="homeworkDesc" placeholder="例如：prepare a cultural presentation about Tai Chi">
+            </div>
+        </fieldset>
+
+        <button type="button" class="generate-btn" onclick="generateFeedback()">生成專業英文評語 (Generate Feedback)</button>
+    </form>
+
+    <!-- 輸出結果區 -->
+    <div class="output-section">
+        <h3>生成結果 (英文 Feedback)：</h3>
+        <textarea id="outputResult" class="output-box" readonly></textarea>
+        <button type="button" class="copy-btn" onclick="copyToClipboard()">一鍵複製報告</button>
+    </div>
+
+    <div class="footer-credit">
+        Shelleytaiwan製作 2026 請勿商用
+    </div>
+</div>
+
+<script>
+    const themes = [
+        "身分認同 (Identity)",
+        "經歷體驗 (Experiences)",
+        "發明創造 (Human Inventions)",
+        "社會組織 (Social Organization)",
+        "共享地球 (Sharing the Planet)",
+        "家庭與社區 (Family and Community)",
+        "語言與文化 (Language and Culture)",
+        "藝術創造與應用 (Artistic Creations)",
+        "科學與技術 (Science and Technology)",
+        "當代生活 (Contemporary Life)",
+        "全球視野和挑戰 (Global Challenges)"
+    ];
+
+    const types = [
+        "單圖作文 (Picture-sequence writing)",
+        "單圖口說 (Picture-sequence speaking)",
+        "四格圖寫作 (Four-picture story writing)",
+        "四格圖口說 (Four-picture story speaking)",
+        "郵件回覆 (Email reply)",
+        "文化演講 (Cultural presentation)",
+        "作業檢查 (Assignment review)",
+        "日常口說對話 (Daily conversation)",
+        "閱讀理解 (Reading comprehension)",
+        "聽力理解 (Listening comprehension)",
+        "程度測驗 (Level test)"
+    ];
+
+    const improvements = [
+        "基本詞彙量 (Basic vocabulary)",
+        "高級詞彙量 (Advanced vocabulary)",
+        "語法 (Grammar)",
+        "成語 (Idioms)",
+        "連接詞 (Transition words)",
+        "名言名句 (Famous quotes/sayings)",
+        "篇章表現力 (Discourse expression)",
+        "流暢度 (Fluency)",
+        "聲調發音 (Tones and pronunciation)",
+        "思辨能力 (Critical thinking)",
+        "聯想力 (Association/Imagination)",
+        "語言組織能力 (Language organization)",
+        "時間掌控 (Time management)",
+        "語速 (Speaking speed)",
+        "跨文化比較 (Cross-cultural comparison)",
+        "連結感想 (Connecting personal reflections)"
+    ];
+
+    const stageTitles = [
+        "一、暖身 (Warm-up)",
+        "二、聽說讀寫 (Second Stage)",
+        "三、聽說讀寫 (Third Stage)",
+        "四、聽說讀寫 (Fourth Stage)",
+        "五、聽說讀寫 (Fifth Stage)",
+        "六、聽說讀寫 (Sixth Stage)"
+    ];
+
+    function initStages() {
+        const container = document.getElementById('stagesContainer');
+        
+        stageTitles.forEach((title, index) => {
+            const isOptional = index >= 3; // 四、五、六預設不選
+            const fieldset = document.createElement('fieldset');
+            
+            let html = `<legend>課程順序 ${title}</legend>`;
+            
+            if (index === 0) {
+                html += `<div class="form-group">
+                            <label>選擇暖身項目：</label>
+                            <select id="stage_mode_0" onchange="toggleWarmup()">
+                                <option value="自我介紹">自我介紹 (Self-introduction)</option>
+                                <option value="程度測驗">程度測驗 (Level test)</option>
+                                <option value="考試說明">考試說明 (Exam orientation)</option>
+                                <option value="小聊">小聊 (Warm-up chat)</option>
+                                <option value="skip">不選 (Skip)</option>
+                            </select>
+                         </div>`;
+            } else {
+                html += `<div class="form-group">
+                            <label>選擇或略過：</label>
+                            <select id="stage_mode_${index}" onchange="toggleStage(${index})">
+                                <option value="active" ${isOptional ? '' : 'selected'}>進行此階段</option>
+                                <option value="skip" ${isOptional ? 'selected' : ''}>不選 (Skip)</option>
+                            </select>
+                         </div>`;
+            }
+            
+            html += `<div id="stage_content_${index}" style="${isOptional ? 'display:none;' : ''}">`;
+            
+            if (index === 0) {
+                html += `<div class="form-group">
+                            <label>暖身表現補充說明：</label>
+                            <input type="text" id="stage_note_0" placeholder="例如：Reviewed previous assignment and discussed study goals...">
+                         </div>`;
+            } else {
+                html += `<div class="form-group">
+                            <label>練習類型：</label>
+                            <select id="stage_type_${index}">`;
+                types.forEach(t => html += `<option value="${t}">${t}</option>`);
+                html += `       </select>
+                         </div>`;
+
+                html += `<div class="form-group">
+                            <label>大綱主題 (可複選)：</label>
+                            <div class="checkbox-group" id="stage_themes_${index}">`;
+                themes.forEach(th => {
+                    html += `<label><input type="checkbox" value="${th}"> ${th}</label>`;
+                });
+                html += `   </div></div>`;
+
+                html += `<div class="form-group">
+                            <label>學生表現程度 (1-10)：</label>
+                            <div class="range-container">
+                                <input type="range" id="stage_score_${index}" min="1" max="10" value="8" oninput="updateRangeVal('stage_score_${index}', 'val_${index}')">
+                                <span class="range-value" id="val_${index}">8</span>
+                            </div>
+                         </div>`;
+
+                html += `<div class="form-group">
+                            <label>需要加強項目 (可複選)：</label>
+                            <div class="checkbox-group" id="stage_imp_${index}">`;
+                improvements.forEach(imp => {
+                    html += `<label><input type="checkbox" value="${imp}"> ${imp}</label>`;
+                });
+                html += `   </div></div>`;
+
+                html += `<div class="form-group">
+                            <label>其他補充說明：</label>
+                            <input type="text" id="stage_note_${index}" placeholder="例如：Maintained good pacing, but could add more personal reflections...">
+                         </div>`;
+            }
+
+            html += `</div>`; 
+            fieldset.innerHTML = html;
+            container.appendChild(fieldset);
+        });
+    }
+
+    function toggleStage(index) {
+        const mode = document.getElementById(`stage_mode_${index}`).value;
+        const content = document.getElementById(`stage_content_${index}`);
+        content.style.display = (mode === 'skip') ? 'none' : 'block';
+    }
+
+    function toggleWarmup() {
+        const mode = document.getElementById(`stage_mode_0`).value;
+        const content = document.getElementById(`stage_content_0`);
+        content.style.display = (mode === 'skip') ? 'none' : 'block';
+    }
+
+    function toggleTextbookLesson() {
+        const val = document.getElementById('useTextbook').value;
+        document.getElementById('lessonNumCol').style.display = (val === 'yes') ? 'block' : 'none';
+    }
+
+    function updateRangeVal(rangeId, valId) {
+        document.getElementById(valId).innerText = document.getElementById(rangeId).value;
+    }
+
+    function generateFeedback() {
+        const name = document.getElementById('studentName').value.trim() || "the student";
+        const gender = document.getElementById('studentGender').value;
+        const pron = (gender === 'female') ? {sub: 'she', obj: 'her', pos: 'her'} : {sub: 'he', obj: 'him', pos: 'his'};
+        const exam = document.getElementById('examType').value;
+        const useTextbook = document.getElementById('useTextbook').value === 'yes';
+        const textbookLesson = document.getElementById('textbookLesson').value.trim();
+        const overallScore = document.getElementById('overallScore').value;
+        const hwDesc = document.getElementById('homeworkDesc').value.trim();
+
+        // 收集勾選的作業項目
+        let hwCheckboxes = document.querySelectorAll(`#homeworkTypes input[type="checkbox"]:checked`);
+        let hwArr = [];
+        hwCheckboxes.forEach(cb => hwArr.push(cb.value));
+
+        let paragraphs = [];
+
+        let intro = `Today’s lesson with ${name} focused on reviewing previous progress and practicing essential skills for the ${exam}.`;
+        if (useTextbook && textbookLesson) {
+            intro += ` We also went through the materials from ${textbookLesson}.`;
+        }
+        paragraphs.push(intro);
+
+        const transitionWords = ["First", "Second", "Third", "Fourth", "Fifth", "Sixth"];
+        let activeCount = 0;
+
+        for (let i = 0; i < 6; i++) {
+            const modeElem = document.getElementById(`stage_mode_${i}`);
+            if (!modeElem || modeElem.value === 'skip') continue;
+
+            activeCount++;
+            let trans = transitionWords[activeCount - 1] || "Next";
+
+            if (i === 0) {
+                let warmupType = modeElem.value;
+                let note = document.getElementById('stage_note_0').value.trim();
+                let warmupText = `${trans}, we started the session with a ${warmupType.toLowerCase()} activity. ${name} engaged well.`;
+                if (note) warmupText += ` ${note}`;
+                paragraphs.push(warmupText);
+            } else {
+                let typeFull = document.getElementById(`stage_type_${i}`).value;
+                
+                let themeCheckboxes = document.querySelectorAll(`#stage_themes_${i} input[type="checkbox"]:checked`);
+                let themesArr = [];
+                themeCheckboxes.forEach(cb => themesArr.push(cb.value.split(' ')[0]));
+
+                let score = parseInt(document.getElementById(`stage_score_${i}`).value);
+                
+                let impCheckboxes = document.querySelectorAll(`#stage_imp_${i} input[type="checkbox"]:checked`);
+                let impsArr = [];
+                impCheckboxes.forEach(cb => impsArr.push(cb.value.split(' ')[0].toLowerCase()));
+
+                let note = document.getElementById(`stage_note_${i}`).value.trim();
+
+                let stageText = `${trans}, we practiced ${typeFull.toLowerCase()}`;
+                if (themesArr.length > 0) {
+                    stageText += ` centered around the theme of ${themesArr.join(', ')}`;
+                }
+                stageText += `. `;
+
+                if (score >= 9) {
+                    stageText += `${name} delivered an exceptional performance in this section, showcasing high accuracy and deep comprehension. `;
+                } else if (score >= 7) {
+                    stageText += `${name} performed very well with solid execution and good overall control. `;
+                } else {
+                    stageText += `${name} completed the exercise successfully, though there remains room for refinement. `;
+                }
+
+                if (impsArr.length > 0) {
+                    stageText += `To elevate ${pron.pos} performance further, ${pron.sub} should focus on improving ${impsArr.join(', ')}. `;
+                }
+
+                if (note) {
+                    stageText += `${note} `;
+                }
+
+                paragraphs.push(stageText.trim());
+            }
+        }
+
+        // 作業段落（支援複選組合）
+        let hwText = `For homework, ${name} will `;
+        if (hwArr.length > 0) {
+            hwText += `complete ${hwArr.join(' and ')}`;
+        } else {
+            hwText += `complete the assigned practice`;
+        }
+        if (hwDesc) {
+            hwText += `: ${hwDesc}`;
+        } else {
+            hwText += `.`;
+        }
+        paragraphs.push(hwText);
+
+        let overallText = `Overall, ${name} performed wonderfully today. ${pron.sub.charAt(0).toUpperCase() + pron.sub.slice(1)} demonstrated consistent effort and strong language capabilities across all tasks. Keep up the fantastic work!`;
+        paragraphs.push(overallText);
+
+        document.getElementById('outputResult').value = paragraphs.join('\n\n');
+    }
+
+    function copyToClipboard() {
+        const outputBox = document.getElementById('outputResult');
+        outputBox.select();
+        document.execCommand('copy');
+        alert('報告已成功複製到剪貼簿！');
+    }
+
+    window.onload = initStages;
+</script>
+
+</body>
+</html>
