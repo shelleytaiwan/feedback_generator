@@ -228,12 +228,12 @@
             <div class="form-group">
                 <label>作業項目 (可複選)：</label>
                 <div class="checkbox-group" id="homeworkTypes">
-                    <label><input type="checkbox" value="listening practice"> 聽力練習 (Listening)</label>
-                    <label><input type="checkbox" value="speaking practice"> 口說練習 (Speaking)</label>
-                    <label><input type="checkbox" value="reading practice"> 閱讀理解 (Reading)</label>
-                    <label><input type="checkbox" value="writing practice"> 寫作練習 (Writing)</label>
-                    <label><input type="checkbox" value="cultural presentation preparation"> 文化演講準備 (Cultural presentation)</label>
-                    <label><input type="checkbox" value="email reply practice"> 郵件回覆 (Email reply)</label>
+                    <label><input type="checkbox" value="聽力練習 (Listening)"> 聽力練習 (Listening)</label>
+                    <label><input type="checkbox" value="口說練習 (Speaking)"> 口說練習 (Speaking)</label>
+                    <label><input type="checkbox" value="閱讀理解 (Reading)"> 閱讀理解 (Reading)</label>
+                    <label><input type="checkbox" value="寫作練習 (Writing)"> 寫作練習 (Writing)</label>
+                    <label><input type="checkbox" value="文化演講準備 (Cultural presentation)"> 文化演講準備 (Cultural presentation)</label>
+                    <label><input type="checkbox" value="郵件回覆 (Email reply)"> 郵件回覆 (Email reply)</label>
                 </div>
             </div>
 
@@ -332,7 +332,7 @@
                                 <option value="程度測驗">程度測驗 (Level test)</option>
                                 <option value="考試說明">考試說明 (Exam orientation)</option>
                                 <option value="小聊">小聊 (Warm-up chat)</option>
-                                <option value="skip">不選 (Skip)</option>
+                                <option value="不選 (Skip)">不選 (Skip)</option>
                             </select>
                          </div>`;
             } else {
@@ -340,7 +340,7 @@
                             <label>選擇或略過：</label>
                             <select id="stage_mode_${index}" onchange="toggleStage(${index})">
                                 <option value="active" ${isOptional ? '' : 'selected'}>進行此階段</option>
-                                <option value="skip" ${isOptional ? 'selected' : ''}>不選 (Skip)</option>
+                                <option value="不選 (Skip)" ${isOptional ? 'selected' : ''}>不選 (Skip)</option>
                             </select>
                          </div>`;
             }
@@ -399,13 +399,13 @@
     function toggleStage(index) {
         const mode = document.getElementById(`stage_mode_${index}`).value;
         const content = document.getElementById(`stage_content_${index}`);
-        content.style.display = (mode === 'skip') ? 'none' : 'block';
+        content.style.display = (mode === '不選 (Skip)') ? 'none' : 'block';
     }
 
     function toggleWarmup() {
         const mode = document.getElementById(`stage_mode_0`).value;
         const content = document.getElementById(`stage_content_0`);
-        content.style.display = (mode === 'skip') ? 'none' : 'block';
+        content.style.display = (mode === '不選 (Skip)') ? 'none' : 'block';
     }
 
     function toggleTextbookLesson() {
@@ -427,14 +427,25 @@
         const overallScore = document.getElementById('overallScore').value;
         const hwDesc = document.getElementById('homeworkDesc').value.trim();
 
-        // 收集勾選的作業項目
+        // 收集勾選的作業項目（中文值轉英文輸出）
         let hwCheckboxes = document.querySelectorAll(`#homeworkTypes input[type="checkbox"]:checked`);
         let hwArr = [];
-        hwCheckboxes.forEach(cb => hwArr.push(cb.value));
+        const hwMap = {
+            '聽力練習 (Listening)': 'listening practice',
+            '口說練習 (Speaking)': 'speaking practice',
+            '閱讀理解 (Reading)': 'reading comprehension',
+            '寫作練習 (Writing)': 'writing practice',
+            '文化演講準備 (Cultural presentation)': 'cultural presentation preparation',
+            '郵件回覆 (Email reply)': 'email reply practice'
+        };
+        hwCheckboxes.forEach(cb => {
+            if (hwMap[cb.value]) hwArr.push(hwMap[cb.value]);
+            else hwArr.push(cb.value);
+        });
 
         let paragraphs = [];
 
-        let intro = `Today’s lesson with ${name} focused on reviewing previous progress and practicing essential skills for the ${exam}.`;
+        let intro = `Today's lesson with ${name} focused on reviewing previous progress and practicing essential skills for the ${exam}.`;
         if (useTextbook && textbookLesson) {
             intro += ` We also went through the materials from ${textbookLesson}.`;
         }
@@ -443,35 +454,99 @@
         const transitionWords = ["First", "Second", "Third", "Fourth", "Fifth", "Sixth"];
         let activeCount = 0;
 
+        // 暖身活動中文轉英文對照
+        const warmupMap = {
+            '自我介紹': 'self-introduction',
+            '程度測驗': 'level test',
+            '考試說明': 'exam orientation',
+            '小聊': 'warm-up chat'
+        };
+
+        // 練習類型中文轉英文對照
+        const typeMap = {
+            '單圖作文 (Picture-sequence writing)': 'picture-sequence writing',
+            '單圖口說 (Picture-sequence speaking)': 'picture-sequence speaking',
+            '四格圖寫作 (Four-picture story writing)': 'four-picture story writing',
+            '四格圖口說 (Four-picture story speaking)': 'four-picture story speaking',
+            '郵件回覆 (Email reply)': 'email reply',
+            '文化演講 (Cultural presentation)': 'cultural presentation',
+            '作業檢查 (Assignment review)': 'assignment review',
+            '日常口說對話 (Daily conversation)': 'daily conversation',
+            '閱讀理解 (Reading comprehension)': 'reading comprehension',
+            '聽力理解 (Listening comprehension)': 'listening comprehension',
+            '程度測驗 (Level test)': 'level test'
+        };
+
+        // 主題中文轉英文對照
+        const themeMap = {
+            '身分認同 (Identity)': 'Identity',
+            '經歷體驗 (Experiences)': 'Experiences',
+            '發明創造 (Human Inventions)': 'Human Inventions',
+            '社會組織 (Social Organization)': 'Social Organization',
+            '共享地球 (Sharing the Planet)': 'Sharing the Planet',
+            '家庭與社區 (Family and Community)': 'Family and Community',
+            '語言與文化 (Language and Culture)': 'Language and Culture',
+            '藝術創造與應用 (Artistic Creations)': 'Artistic Creations',
+            '科學與技術 (Science and Technology)': 'Science and Technology',
+            '當代生活 (Contemporary Life)': 'Contemporary Life',
+            '全球視野和挑戰 (Global Challenges)': 'Global Challenges'
+        };
+
+        // 改善項目中文轉英文對照
+        const impMap = {
+            '基本詞彙量 (Basic vocabulary)': 'Basic vocabulary',
+            '高級詞彙量 (Advanced vocabulary)': 'Advanced vocabulary',
+            '語法 (Grammar)': 'Grammar',
+            '成語 (Idioms)': 'Idioms',
+            '連接詞 (Transition words)': 'Transition words',
+            '名言名句 (Famous quotes/sayings)': 'Famous quotes/sayings',
+            '篇章表現力 (Discourse expression)': 'Discourse expression',
+            '流暢度 (Fluency)': 'Fluency',
+            '聲調發音 (Tones and pronunciation)': 'Tones and pronunciation',
+            '思辨能力 (Critical thinking)': 'Critical thinking',
+            '聯想力 (Association/Imagination)': 'Association/Imagination',
+            '語言組織能力 (Language organization)': 'Language organization',
+            '時間掌控 (Time management)': 'Time management',
+            '語速 (Speaking speed)': 'Speaking speed',
+            '跨文化比較 (Cross-cultural comparison)': 'Cross-cultural comparison',
+            '連結感想 (Connecting personal reflections)': 'Connecting personal reflections'
+        };
+
         for (let i = 0; i < 6; i++) {
             const modeElem = document.getElementById(`stage_mode_${i}`);
-            if (!modeElem || modeElem.value === 'skip') continue;
+            if (!modeElem || modeElem.value === '不選 (Skip)') continue;
 
             activeCount++;
             let trans = transitionWords[activeCount - 1] || "Next";
 
             if (i === 0) {
-                let warmupType = modeElem.value;
+                let warmupType = warmupMap[modeElem.value] || modeElem.value.toLowerCase();
                 let note = document.getElementById('stage_note_0').value.trim();
-                let warmupText = `${trans}, we started the session with a ${warmupType.toLowerCase()} activity. ${name} engaged well.`;
+                let warmupText = `${trans}, we started the session with a ${warmupType} activity. ${name} engaged well.`;
                 if (note) warmupText += ` ${note}`;
                 paragraphs.push(warmupText);
             } else {
-                let typeFull = document.getElementById(`stage_type_${i}`).value;
+                let typeFull = typeMap[document.getElementById(`stage_type_${i}`).value] || document.getElementById(`stage_type_${i}`).value;
                 
                 let themeCheckboxes = document.querySelectorAll(`#stage_themes_${i} input[type="checkbox"]:checked`);
                 let themesArr = [];
-                themeCheckboxes.forEach(cb => themesArr.push(cb.value.split(' ')[0]));
+                themeCheckboxes.forEach(cb => {
+                    if (themeMap[cb.value]) themesArr.push(themeMap[cb.value]);
+                    else themesArr.push(cb.value);
+                });
 
                 let score = parseInt(document.getElementById(`stage_score_${i}`).value);
                 
                 let impCheckboxes = document.querySelectorAll(`#stage_imp_${i} input[type="checkbox"]:checked`);
                 let impsArr = [];
-                impCheckboxes.forEach(cb => impsArr.push(cb.value.split(' ')[0].toLowerCase()));
+                impCheckboxes.forEach(cb => {
+                    if (impMap[cb.value]) impsArr.push(impMap[cb.value]);
+                    else impsArr.push(cb.value);
+                });
 
                 let note = document.getElementById(`stage_note_${i}`).value.trim();
 
-                let stageText = `${trans}, we practiced ${typeFull.toLowerCase()}`;
+                let stageText = `${trans}, we practiced ${typeFull}`;
                 if (themesArr.length > 0) {
                     stageText += ` centered around the theme of ${themesArr.join(', ')}`;
                 }
@@ -497,7 +572,7 @@
             }
         }
 
-        // 作業段落（支援複選組合）
+        // 作業段落
         let hwText = `For homework, ${name} will `;
         if (hwArr.length > 0) {
             hwText += `complete ${hwArr.join(' and ')}`;
