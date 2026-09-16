@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>評語報告生成器</title>
+    <title>專業英文評語報告生成器</title>
     <style>
         :root {
             --primary: #2c3e50;
@@ -132,14 +132,15 @@
         }
         textarea.output-box {
             width: 100%;
-            height: 250px;
+            height: 280px;
             background: #1a252f;
             color: #ecf0f1;
             border: 1px solid #34495e;
             border-radius: 6px;
             padding: 12px;
-            font-family: monospace;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 14px;
+            line-height: 1.6;
             resize: vertical;
             box-sizing: border-box;
         }
@@ -147,7 +148,7 @@
             background-color: var(--accent);
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 6px;
             cursor: pointer;
             margin-top: 10px;
@@ -162,12 +163,17 @@
             font-size: 12px;
             color: #7f8c8d;
         }
+        .preset-select {
+            margin-bottom: 6px;
+            background-color: #f0f7ff;
+            border-color: #b8daff;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>評語報告生成器</h1>
+    <h1>專業英文評語報告生成器</h1>
     
     <form id="reportForm">
         <!-- 基本資料 -->
@@ -176,13 +182,13 @@
             <div class="row">
                 <div class="col">
                     <label for="studentName">學生姓名：</label>
-                    <input type="text" id="studentName" placeholder="例如：Michelle">
+                    <input type="text" id="studentName" placeholder="例如：Luke">
                 </div>
                 <div class="col">
                     <label for="studentGender">性別：</label>
                     <select id="studentGender">
-                        <option value="female">女 (She/Her)</option>
                         <option value="male">男 (He/Him)</option>
+                        <option value="female">女 (She/Her)</option>
                     </select>
                 </div>
             </div>
@@ -190,8 +196,8 @@
                 <div class="col">
                     <label for="examType">考試類型：</label>
                     <select id="examType">
-                        <option value="AP Chinese Language and Culture">AP中文和文化</option>
                         <option value="IB Chinese B">IB中文B</option>
+                        <option value="AP Chinese Language and Culture">AP中文和文化</option>
                         <option value="General Chinese">其他 / 一般中文課程</option>
                     </select>
                 </div>
@@ -218,37 +224,45 @@
         <fieldset>
             <legend>總結與作業</legend>
             <div class="form-group">
-                <label>整體表現 (1-10 分)：</label>
+                <label>整體表現分數 (1-10 分)：</label>
                 <div class="range-container">
-                    <input type="range" id="overallScore" min="1" max="10" value="9" oninput="updateRangeVal('overallScore', 'overallVal')">
-                    <span class="range-value" id="overallVal">9</span>
+                    <input type="range" id="overallScore" min="1" max="10" value="7" oninput="updateRangeVal('overallScore', 'overallVal')">
+                    <span class="range-value" id="overallVal">7</span>
                 </div>
             </div>
             
             <div class="form-group">
                 <label>作業項目 (可複選)：</label>
                 <div class="checkbox-group" id="homeworkTypes">
+                    <label><input type="checkbox" value="寫作練習 (Writing)"> 寫作練習 (Writing)</label>
                     <label><input type="checkbox" value="聽力練習 (Listening)"> 聽力練習 (Listening)</label>
                     <label><input type="checkbox" value="口說練習 (Speaking)"> 口說練習 (Speaking)</label>
                     <label><input type="checkbox" value="閱讀理解 (Reading)"> 閱讀理解 (Reading)</label>
-                    <label><input type="checkbox" value="寫作練習 (Writing)"> 寫作練習 (Writing)</label>
                     <label><input type="checkbox" value="文化演講準備 (Cultural presentation)"> 文化演講準備 (Cultural presentation)</label>
                     <label><input type="checkbox" value="郵件回覆 (Email reply)"> 郵件回覆 (Email reply)</label>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="homeworkDesc">作業主題與補充內容：</label>
-                <input type="text" id="homeworkDesc" placeholder="例如：prepare a cultural presentation about Tai Chi">
+                <label for="homeworkPreset">常用作業預設評語 (英文)：</label>
+                <select id="homeworkPreset" class="preset-select" onchange="applyHwPreset()">
+                    <option value="">-- 請選擇預設作業內容或自行輸入 --</option>
+                    <option value="write a speech script based on the content learned in today's lesson.">撰寫今日課程內容演講稿 (Write a speech script...)</option>
+                    <option value="review key vocabulary and grammar points covered in today's session.">複習今日詞彙與語法 (Review vocabulary and grammar...)</option>
+                    <option value="complete the assigned reading passage and key vocabulary practice.">完成閱讀短文與詞彙練習 (Complete reading passage...)</option>
+                    <option value="prepare a 2-minute oral presentation on the current topic.">準備2分鐘主題口說演講 (Prepare a 2-min presentation...)</option>
+                </select>
+                <label for="homeworkDesc">作業主題與補充說明 (系統將自動淨化為純英文)：</label>
+                <input type="text" id="homeworkDesc" placeholder="例如：write a speech script based on today's lesson">
             </div>
         </fieldset>
 
-        <button type="button" class="generate-btn" onclick="generateFeedback()">生成專業英文評語 (Generate Feedback)</button>
+        <button type="button" class="generate-btn" onclick="generateFeedback()">生成專業純英文評語 (Generate Professional Report)</button>
     </form>
 
     <!-- 輸出結果區 -->
     <div class="output-section">
-        <h3>生成結果 (英文 Feedback)：</h3>
+        <h3>生成結果 (純英文 Report)：</h3>
         <textarea id="outputResult" class="output-box" readonly></textarea>
         <button type="button" class="copy-btn" onclick="copyToClipboard()">一鍵複製報告</button>
     </div>
@@ -274,16 +288,16 @@
     ];
 
     const types = [
-        "單圖作文 (Picture-sequence writing)",
+        "作業檢查 (Assignment review)",
+        "聽力理解 (Listening comprehension)",
+        "閱讀理解 (Reading comprehension)",
         "單圖口說 (Picture-sequence speaking)",
+        "單圖作文 (Picture-sequence writing)",
         "四格圖寫作 (Four-picture story writing)",
         "四格圖口說 (Four-picture story speaking)",
         "郵件回覆 (Email reply)",
         "文化演講 (Cultural presentation)",
-        "作業檢查 (Assignment review)",
         "日常口說對話 (Daily conversation)",
-        "閱讀理解 (Reading comprehension)",
-        "聽力理解 (Listening comprehension)",
         "程度測驗 (Level test)"
     ];
 
@@ -308,18 +322,27 @@
 
     const stageTitles = [
         "一、暖身 (Warm-up)",
-        "二、聽說讀寫 (Second Stage)",
-        "三、聽說讀寫 (Third Stage)",
-        "四、聽說讀寫 (Fourth Stage)",
-        "五、聽說讀寫 (Fifth Stage)",
-        "六、聽說讀寫 (Sixth Stage)"
+        "二、課程重點 (Second Stage)",
+        "三、課程重點 (Third Stage)",
+        "四、課程重點 (Fourth Stage)",
+        "五、課程重點 (Fifth Stage)",
+        "六、課程重點 (Sixth Stage)"
     ];
+
+    // 階段常見評語預設選項
+    const notePresets = {
+        assignment_incomplete: "Did not submit or complete the assigned homework prior to class.",
+        too_difficult: "The material was relatively challenging. We will adjust the level and begin with simpler practice next time.",
+        reading_key_words: "Needs to strengthen reading skills for longer passages, focusing on identifying keywords and overall semantics.",
+        picture_details: "Basic sentence structure was fine, but image descriptions lacked detailed context (who, when, where, what) and required deeper critical thinking and advanced vocabulary.",
+        solid_performance: "Demonstrated solid understanding and executed the task with confidence."
+    };
 
     function initStages() {
         const container = document.getElementById('stagesContainer');
         
         stageTitles.forEach((title, index) => {
-            const isOptional = index >= 3; // 四、五、六預設不選
+            const isOptional = index >= 4; // 五、六預設不選
             const fieldset = document.createElement('fieldset');
             
             let html = `<legend>課程順序 ${title}</legend>`;
@@ -369,10 +392,10 @@
                 html += `   </div></div>`;
 
                 html += `<div class="form-group">
-                            <label>學生表現程度 (1-10)：</label>
+                            <label>學生表現程度 (1-10分，低於4分代表未完成或顯著困難)：</label>
                             <div class="range-container">
-                                <input type="range" id="stage_score_${index}" min="1" max="10" value="8" oninput="updateRangeVal('stage_score_${index}', 'val_${index}')">
-                                <span class="range-value" id="val_${index}">8</span>
+                                <input type="range" id="stage_score_${index}" min="1" max="10" value="7" oninput="updateRangeVal('stage_score_${index}', 'val_${index}')">
+                                <span class="range-value" id="val_${index}">7</span>
                             </div>
                          </div>`;
 
@@ -385,8 +408,17 @@
                 html += `   </div></div>`;
 
                 html += `<div class="form-group">
-                            <label>其他補充說明：</label>
-                            <input type="text" id="stage_note_${index}" placeholder="例如：Maintained good pacing, but could add more personal reflections...">
+                            <label>常用英文補充選項：</label>
+                            <select id="stage_preset_${index}" class="preset-select" onchange="applyStagePreset(${index})">
+                                <option value="">-- 可快速點選預設英文評語 --</option>
+                                <option value="${notePresets.assignment_incomplete}">未繳交/未完成上次作業 (Did not submit assignment)</option>
+                                <option value="${notePresets.too_difficult}">內容偏難/答錯多，下次從簡單開始 (Material too hard, start simpler next time)</option>
+                                <option value="${notePresets.reading_key_words}">長文閱讀需加強抓關鍵字與理解 (Long text reading & key details needed)</option>
+                                <option value="${notePresets.picture_details}">描述圖片缺乏細節與深層思考 (Image description missing details)</option>
+                                <option value="${notePresets.solid_performance}">表現穩定，執行良好 (Solid performance)</option>
+                            </select>
+                            <label>自訂補充說明 (建議填寫英文，手動輸入中文將自動轉換為道地英文)：</label>
+                            <input type="text" id="stage_note_${index}" placeholder="例如：Found the material challenging; will practice simpler tasks next time.">
                          </div>`;
             }
 
@@ -417,17 +449,54 @@
         document.getElementById(valId).innerText = document.getElementById(rangeId).value;
     }
 
+    function applyStagePreset(index) {
+        const presetVal = document.getElementById(`stage_preset_${index}`).value;
+        if (presetVal) {
+            document.getElementById(`stage_note_${index}`).value = presetVal;
+        }
+    }
+
+    function applyHwPreset() {
+        const presetVal = document.getElementById('homeworkPreset').value;
+        if (presetVal) {
+            document.getElementById('homeworkDesc').value = presetVal;
+        }
+    }
+
+    // 將常見中文自動轉譯為標準英文，並清空剩餘中文字元
+    function sanitizeAndTranslate(text) {
+        if (!text) return "";
+        let t = text;
+
+        const translations = [
+            { zh: /上次交代的寫作沒做|沒交作業|沒做作業|未交作業|零分/g, en: "did not submit or complete the previously assigned writing homework." },
+            { zh: /可能偏難.*回答錯.*下次從簡單.*練習|偏難.*答錯.*下次從簡單/g, en: "found the material quite challenging and struggled with several questions. We will adjust the level and start with simpler exercises in the next session." },
+            { zh: /看長文的能力要加強.*抓關鍵字|看長文.*抓關鍵字|理解語義/g, en: "needs to strengthen long-text reading skills, focusing on identifying key keywords and overall meaning." },
+            { zh: /基礎句型可以.*描述圖片時沒有顧及人時地事物.*缺深層思考|描述圖片.*人時地事物/g, en: "demonstrated solid basic sentence structures, but image descriptions lacked key details (people, time, location, events) and required deeper critical thinking and advanced vocabulary." },
+            { zh: /作業.*寫有關今天所學內容的演講稿|寫演講稿/g, en: "write a speech script based on the content learned in today's lesson." },
+            { zh: /偏難/g, en: "the material was challenging" },
+            { zh: /從簡單/g, en: "start with simpler practice" }
+        ];
+
+        translations.forEach(item => {
+            t = t.replace(item.zh, item.en);
+        });
+
+        // 徹底淨化：濾除所有剩餘中文字元
+        t = t.replace(/[\u4e00-\u9fa5]+/g, "").replace(/\s+/g, " ").trim();
+        return t;
+    }
+
     function generateFeedback() {
-        const name = document.getElementById('studentName').value.trim() || "the student";
+        const name = document.getElementById('studentName').value.trim() || "Luke";
         const gender = document.getElementById('studentGender').value;
-        const pron = (gender === 'female') ? {sub: 'she', obj: 'her', pos: 'her'} : {sub: 'he', obj: 'him', pos: 'his'};
+        const pron = (gender === 'female') ? {sub: 'she', obj: 'her', pos: 'her', Sub: 'She'} : {sub: 'he', obj: 'him', pos: 'his', Sub: 'He'};
         const exam = document.getElementById('examType').value;
         const useTextbook = document.getElementById('useTextbook').value === 'yes';
         const textbookLesson = document.getElementById('textbookLesson').value.trim();
-        const overallScore = document.getElementById('overallScore').value;
-        const hwDesc = document.getElementById('homeworkDesc').value.trim();
+        const overallScore = parseInt(document.getElementById('overallScore').value);
+        const hwDescRaw = document.getElementById('homeworkDesc').value.trim();
 
-        // 收集勾選的作業項目（中文值轉英文輸出）
         let hwCheckboxes = document.querySelectorAll(`#homeworkTypes input[type="checkbox"]:checked`);
         let hwArr = [];
         const hwMap = {
@@ -454,7 +523,6 @@
         const transitionWords = ["First", "Second", "Third", "Fourth", "Fifth", "Sixth"];
         let activeCount = 0;
 
-        // 暖身活動中文轉英文對照
         const warmupMap = {
             '自我介紹': 'self-introduction',
             '程度測驗': 'level test',
@@ -462,7 +530,6 @@
             '小聊': 'warm-up chat'
         };
 
-        // 練習類型中文轉英文對照
         const typeMap = {
             '單圖作文 (Picture-sequence writing)': 'picture-sequence writing',
             '單圖口說 (Picture-sequence speaking)': 'picture-sequence speaking',
@@ -477,7 +544,6 @@
             '程度測驗 (Level test)': 'level test'
         };
 
-        // 主題中文轉英文對照
         const themeMap = {
             '身分認同 (Identity)': 'Identity',
             '經歷體驗 (Experiences)': 'Experiences',
@@ -492,7 +558,6 @@
             '全球視野和挑戰 (Global Challenges)': 'Global Challenges'
         };
 
-        // 改善項目中文轉英文對照
         const impMap = {
             '基本詞彙量 (Basic vocabulary)': 'Basic vocabulary',
             '高級詞彙量 (Advanced vocabulary)': 'Advanced vocabulary',
@@ -521,9 +586,10 @@
 
             if (i === 0) {
                 let warmupType = warmupMap[modeElem.value] || modeElem.value.toLowerCase();
-                let note = document.getElementById('stage_note_0').value.trim();
+                let noteRaw = document.getElementById('stage_note_0').value.trim();
+                let sanitizedNote = sanitizeAndTranslate(noteRaw);
                 let warmupText = `${trans}, we started the session with a ${warmupType} activity. ${name} engaged well.`;
-                if (note) warmupText += ` ${note}`;
+                if (sanitizedNote) warmupText += ` ${sanitizedNote}`;
                 paragraphs.push(warmupText);
             } else {
                 let typeFull = typeMap[document.getElementById(`stage_type_${i}`).value] || document.getElementById(`stage_type_${i}`).value;
@@ -544,7 +610,8 @@
                     else impsArr.push(cb.value);
                 });
 
-                let note = document.getElementById(`stage_note_${i}`).value.trim();
+                let noteRaw = document.getElementById(`stage_note_${i}`).value.trim();
+                let sanitizedNote = sanitizeAndTranslate(noteRaw);
 
                 let stageText = `${trans}, we practiced ${typeFull}`;
                 if (themesArr.length > 0) {
@@ -552,20 +619,25 @@
                 }
                 stageText += `. `;
 
-                if (score >= 9) {
-                    stageText += `${name} delivered an exceptional performance in this section, showcasing high accuracy and deep comprehension. `;
+                // 精準對應分數等級
+                if (typeFull.includes("assignment review") && score <= 4) {
+                    stageText += `${name} did not submit or complete the assigned homework prior to today's lesson, which limited our ability to review previous writing progress. `;
+                } else if (score >= 9) {
+                    stageText += `${name} delivered an exceptional performance in this task, showcasing high accuracy and thorough comprehension. `;
                 } else if (score >= 7) {
                     stageText += `${name} performed very well with solid execution and good overall control. `;
+                } else if (score >= 5) {
+                    stageText += `${name} completed the exercise with reasonable effort, though there remains room for refinement and targeted practice. `;
                 } else {
-                    stageText += `${name} completed the exercise successfully, though there remains room for refinement. `;
+                    stageText += `${name} encountered noticeable difficulty with this task as the material was quite challenging. We will adjust the difficulty level to build foundational skills in future sessions. `;
                 }
 
                 if (impsArr.length > 0) {
                     stageText += `To elevate ${pron.pos} performance further, ${pron.sub} should focus on improving ${impsArr.join(', ')}. `;
                 }
 
-                if (note) {
-                    stageText += `${note} `;
+                if (sanitizedNote) {
+                    stageText += `${sanitizedNote} `;
                 }
 
                 paragraphs.push(stageText.trim());
@@ -573,20 +645,32 @@
         }
 
         // 作業段落
+        let sanitizedHwDesc = sanitizeAndTranslate(hwDescRaw);
         let hwText = `For homework, ${name} will `;
         if (hwArr.length > 0) {
             hwText += `complete ${hwArr.join(' and ')}`;
         } else {
             hwText += `complete the assigned practice`;
         }
-        if (hwDesc) {
-            hwText += `: ${hwDesc}`;
+
+        if (sanitizedHwDesc) {
+            hwText += `: ${sanitizedHwDesc}`;
         } else {
             hwText += `.`;
         }
         paragraphs.push(hwText);
 
-        let overallText = `Overall, ${name} performed wonderfully today. ${pron.sub.charAt(0).toUpperCase() + pron.sub.slice(1)} demonstrated consistent effort and strong language capabilities across all tasks. Keep up the fantastic work!`;
+        // 總評精準匹配分數
+        let overallText = "";
+        if (overallScore >= 9) {
+            overallText = `Overall, ${name} performed wonderfully today. ${pron.Sub} demonstrated consistent effort and exceptional language capabilities across all tasks. Keep up the fantastic work!`;
+        } else if (overallScore >= 7) {
+            overallText = `Overall, ${name} showed good effort and solid performance throughout today's session. Continued practice on the highlighted areas will further enhance ${pron.pos} language mastery.`;
+        } else if (overallScore >= 5) {
+            overallText = `Overall, ${name} made a positive effort in today's lesson. Focusing on the recommended improvements and completing regular homework assignments will help build greater accuracy and confidence.`;
+        } else {
+            overallText = `Overall, today's session highlighted key foundational areas that require focused practice. With consistent review and regular submission of assignments, ${name} can overcome these challenges and make steady progress.`;
+        }
         paragraphs.push(overallText);
 
         document.getElementById('outputResult').value = paragraphs.join('\n\n');
@@ -596,7 +680,7 @@
         const outputBox = document.getElementById('outputResult');
         outputBox.select();
         document.execCommand('copy');
-        alert('報告已成功複製到剪貼簿！');
+        alert('專業純英文報告已成功複製到剪貼簿！');
     }
 
     window.onload = initStages;
