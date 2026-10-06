@@ -250,9 +250,9 @@
                     <option value="write a speech script based on the content learned in today's lesson.">撰寫今日課程內容演講稿 (Write a speech script...)</option>
                     <option value="review key vocabulary and grammar points covered in today's session.">複習今日詞彙與語法 (Review vocabulary and grammar...)</option>
                     <option value="complete the assigned reading passage and key vocabulary practice.">完成閱讀短文與詞彙練習 (Complete reading passage...)</option>
-                    <option value="prepare a 2-minute oral presentation on the current topic.">準備2分鐘主題口說演講 (Prepare a 2-min presentation...)</option>
+                    <option value="prepare a 3-minute oral presentation on the current topic.">準備3分鐘主題口說演講 (Prepare a 3-min presentation...)</option>
                 </select>
-                <label for="homeworkDesc">作業主題與補充說明 (系統將自動淨化為純英文)：</label>
+                <label for="homeworkDesc">作業主題與補充說明 (可直接寫中文，按生成時會自動翻譯成英文)：</label>
                 <input type="text" id="homeworkDesc" placeholder="例如：write a speech script based on today's lesson">
             </div>
         </fieldset>
@@ -417,7 +417,7 @@
                                 <option value="${notePresets.picture_details}">描述圖片缺乏細節與深層思考 (Image description missing details)</option>
                                 <option value="${notePresets.solid_performance}">表現穩定，執行良好 (Solid performance)</option>
                             </select>
-                            <label>自訂補充說明 (建議填寫英文，手動輸入中文將自動轉換為道地英文)：</label>
+                            <label>自訂補充說明 (可直接寫中文，按生成時會自動翻譯成英文)：</label>
                             <input type="text" id="stage_note_${index}" placeholder="例如：Found the material challenging; will practice simpler tasks next time.">
                          </div>`;
             }
@@ -463,31 +463,70 @@
         }
     }
 
-    // 將常見中文自動轉譯為標準英文，並清空剩餘中文字元
-    function sanitizeAndTranslate(text) {
+    const CJK_RE = /[\u3400-\u9fff\uf900-\ufaff]/;
+    let translationFailed = false;
+
+    // 透過線上翻譯服務將中文翻成英文（Google 翻譯為主，MyMemory 為備援）
+    async function translateZhToEn(text) {
+        try {
+            const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-TW&tl=en&dt=t&q=' + encodeURIComponent(text);
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            const out = data[0].map(seg => seg[0]).join('').trim();
+            if (out) return out;
+        } catch (e) {
+            console.warn('Google translate failed:', e);
+        }
+        try {
+            const url = 'https://api.mymemory.translated.net/get?langpair=zh-TW|en&q=' + encodeURIComponent(text);
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            const out = (data.responseData && data.responseData.translatedText || '').trim();
+            if (out && !CJK_RE.test(out)) return out;
+        } catch (e) {
+            console.warn('MyMemory translate failed:', e);
+        }
+        return null;
+    }
+
+    // 有中文就翻成英文；翻譯失敗時保留原文（不會偷偷刪掉），並提醒使用者
+    async function sanitizeAndTranslate(text) {
         if (!text) return "";
-        let t = text;
-
-        const translations = [
-            { zh: /上次交代的寫作沒做|沒交作業|沒做作業|未交作業|零分/g, en: "did not submit or complete the previously assigned writing homework." },
-            { zh: /可能偏難.*回答錯.*下次從簡單.*練習|偏難.*答錯.*下次從簡單/g, en: "found the material quite challenging and struggled with several questions. We will adjust the level and start with simpler exercises in the next session." },
-            { zh: /看長文的能力要加強.*抓關鍵字|看長文.*抓關鍵字|理解語義/g, en: "needs to strengthen long-text reading skills, focusing on identifying key keywords and overall meaning." },
-            { zh: /基礎句型可以.*描述圖片時沒有顧及人時地事物.*缺深層思考|描述圖片.*人時地事物/g, en: "demonstrated solid basic sentence structures, but image descriptions lacked key details (people, time, location, events) and required deeper critical thinking and advanced vocabulary." },
-            { zh: /作業.*寫有關今天所學內容的演講稿|寫演講稿/g, en: "write a speech script based on the content learned in today's lesson." },
-            { zh: /偏難/g, en: "the material was challenging" },
-            { zh: /從簡單/g, en: "start with simpler practice" }
-        ];
-
-        translations.forEach(item => {
-            t = t.replace(item.zh, item.en);
-        });
-
-        // 徹底淨化：濾除所有剩餘中文字元
-        t = t.replace(/[\u4e00-\u9fa5]+/g, "").replace(/\s+/g, " ").trim();
+        let t = text.trim();
+        if (CJK_RE.test(t)) {
+            const translated = await translateZhToEn(t);
+            if (translated) {
+                t = translated;
+            } else {
+                translationFailed = true;
+                return t;
+            }
+        }
+        t = t.replace(/\s+/g, " ").trim();
+        if (t && !/[.!?]$/.test(t)) t += ".";
         return t;
     }
 
-    function generateFeedback() {
+    async function generateFeedback() {
+        const btn = document.querySelector('.generate-btn');
+        const btnLabel = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = '翻譯與生成中，請稍候... (Translating...)';
+        translationFailed = false;
+        try {
+            await buildFeedback();
+        } finally {
+            btn.disabled = false;
+            btn.innerText = btnLabel;
+        }
+        if (translationFailed) {
+            alert('部分中文評語無法連線翻譯，已保留中文原文，請檢查網路後再按一次生成，或改寫成英文。');
+        }
+    }
+
+    async function buildFeedback() {
         const name = document.getElementById('studentName').value.trim() || "Luke";
         const gender = document.getElementById('studentGender').value;
         const pron = (gender === 'female') ? {sub: 'she', obj: 'her', pos: 'her', Sub: 'She'} : {sub: 'he', obj: 'him', pos: 'his', Sub: 'He'};
@@ -587,7 +626,7 @@
             if (i === 0) {
                 let warmupType = warmupMap[modeElem.value] || modeElem.value.toLowerCase();
                 let noteRaw = document.getElementById('stage_note_0').value.trim();
-                let sanitizedNote = sanitizeAndTranslate(noteRaw);
+                let sanitizedNote = await sanitizeAndTranslate(noteRaw);
                 let warmupText = `${trans}, we started the session with a ${warmupType} activity. ${name} engaged well.`;
                 if (sanitizedNote) warmupText += ` ${sanitizedNote}`;
                 paragraphs.push(warmupText);
@@ -611,7 +650,7 @@
                 });
 
                 let noteRaw = document.getElementById(`stage_note_${i}`).value.trim();
-                let sanitizedNote = sanitizeAndTranslate(noteRaw);
+                let sanitizedNote = await sanitizeAndTranslate(noteRaw);
 
                 let stageText = `${trans}, we practiced ${typeFull}`;
                 if (themesArr.length > 0) {
@@ -645,7 +684,7 @@
         }
 
         // 作業段落
-        let sanitizedHwDesc = sanitizeAndTranslate(hwDescRaw);
+        let sanitizedHwDesc = await sanitizeAndTranslate(hwDescRaw);
         let hwText = `For homework, ${name} will `;
         if (hwArr.length > 0) {
             hwText += `complete ${hwArr.join(' and ')}`;
